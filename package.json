@@ -1,0 +1,31 @@
+{
+  "name": "insomnia",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "tslint -c tslint.json -p tsconfig.json",
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/express": "^4.17.3",
+    "@types/node": "^13.9.3",
+    "bitcore-lib-cash": "^8.16.2",
+    "dotenv": "^8.2.0",
+    "electrum-cash": "^1.0.1",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "swagger-ui-express": "^4.1.4",
+    "swagger-ui-themes": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/morgan": "^1.9.0",
+    "tslint": "^6.1.0",
+    "typescript": "^3.8.3"
+  }
+}

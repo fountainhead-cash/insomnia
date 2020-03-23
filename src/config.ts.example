@@ -1,0 +1,19 @@
+const config = {
+  "port": 8000,
+  "electrum": {
+    "application": "MyApplication",
+    "version": "1.4.1",
+    "confidence": 2,
+    "distribution": 3,
+    "servers": [
+      "fulcrum.fountainhead.cash:50002",
+      "electrum.imaginary.cash:50002",
+      "bch.imaginary.cash:50002",
+      "electroncash.de:50002",
+      "electroncash.dk:50002",
+      "electron.jochen-hoenicke.de:51002",
+    ]
+  }
+};
+
+export { config };
