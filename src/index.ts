@@ -151,7 +151,7 @@ router.get('/block/headers/:height', async (req, res) => {
 const addressToScripthash = (addrstr: string) => {
   const address = bitcore.Address.fromString(addrstr)
   const script = bitcore.Script.buildPublicKeyHashOut(address);
-  var scripthash = bitcore.crypto.Hash.sha256(script.toBuffer()).reverse().toString('hex');
+  const scripthash = bitcore.crypto.Hash.sha256(script.toBuffer()).reverse().toString('hex');
 
   return scripthash;
 }
