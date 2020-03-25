@@ -193,7 +193,7 @@
 					"address"
 				],
 				"summary": "Address BCH balance",
-				"description": "Returns the confirmed and unconfirmed balance of an address",
+				"description": "Returns the confirmed and unconfirmed balance of an address in satoshis",
 				"parameters": [
 					{
 						"name": "address",
