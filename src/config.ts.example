@@ -13,6 +13,10 @@ const config = {
       "electroncash.dk:50002",
       "electron.jochen-hoenicke.de:51002",
     ]
+  },
+  "ratelimit": {
+    "windowMs": 1 * 60 * 1000,
+    "max": 100
   }
 };
 

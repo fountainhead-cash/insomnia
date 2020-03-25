@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 import swaggerUi from 'swagger-ui-express';
 import bitcore from 'bitcore-lib-cash';
 import morgan from 'morgan';
+import rateLimit from "express-rate-limit";
 
 
 const electrum = new Cluster(
@@ -24,9 +25,20 @@ for (const server of config.electrum.servers) {
   electrum.addServer(host, port);
 }
 
+const apiLimiter = rateLimit({
+  ...config.ratelimit,
+  ...{
+    message: {
+      success: false,
+      message: "Too many requests"
+    }
+  }
+});
+
 const app = express();
 app.use(bodyParser.text({ limit: '100kb' }));
 app.disable('x-powered-by');
+app.use('/v1/', apiLimiter);
 
 const swaggerDocument = JSON.parse(fs.readFileSync(`${__dirname}/../swagger.json`, 'utf8'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
