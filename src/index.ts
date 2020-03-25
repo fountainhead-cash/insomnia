@@ -90,7 +90,7 @@ router.get('/tx/merkle/:txid/:height', async (req, res) => {
   });
 });
 
-app.post('/tx/broadcast', async (req, res) => {
+router.post('/tx/broadcast', async (req, res) => {
   const transactionHex = req.body;
   try {
     var electrumResponse = await electrum.request('blockchain.transaction.broadcast', transactionHex);
