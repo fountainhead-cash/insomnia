@@ -182,7 +182,7 @@
     },
 	"openapi": "3.0.0",
 	"info": {
-		"description": "insomnia.fountainhead.cash provides an easy way to interact with the Bitcoin Cash blockchain using HTTP. It is built on top of the electrum protocol which powers Electron Cash. Join our chat [t.me/fountainheadcash](https://t.me/fountainheadcash)",
+		"description": "insomnia.fountainhead.cash provides an easy way to interact with the Bitcoin Cash blockchain using HTTP. It is built on top of the electrum protocol which powers Electron Cash. Join our chat [t.me/fountainheadcash](https://t.me/fountainheadcash) and [view the code](https://github.com/fountainhead-cash/insomnia)",
 		"version": "0.0.1",
 		"title": "INSOMNIA"
 	},

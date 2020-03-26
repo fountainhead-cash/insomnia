@@ -41,7 +41,7 @@ app.disable('x-powered-by');
 app.use('/v1/', apiLimiter);
 
 const swaggerDocument = JSON.parse(fs.readFileSync(`${__dirname}/../swagger.json`, 'utf8'));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customCss: fs.readFileSync(`${__dirname}/../node_modules/swagger-ui-themes/themes/3.x/theme-newspaper.css`)
   + '.swagger-ui .scheme-container, .swagger-ui .topbar { display: none !important; }'
 }));
