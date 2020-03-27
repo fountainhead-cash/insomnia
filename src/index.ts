@@ -3,7 +3,6 @@ import fs from 'fs';
 import { Cluster } from 'electrum-cash';
 import express from 'express';
 import bodyParser from 'body-parser';
-import swaggerUi from 'swagger-ui-express';
 import bitcore from 'bitcore-lib-cash';
 import morgan from 'morgan';
 import rateLimit from "express-rate-limit";
@@ -40,19 +39,11 @@ app.use(bodyParser.text({ limit: '100kb' }));
 app.disable('x-powered-by');
 app.use('/v1/', apiLimiter);
 
-const swaggerDocument = JSON.parse(fs.readFileSync(`${__dirname}/../swagger.json`, 'utf8'));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-  customCss: fs.readFileSync(`${__dirname}/../node_modules/swagger-ui-themes/themes/3.x/theme-newspaper.css`)
-  + '.swagger-ui .scheme-container, .swagger-ui .topbar { display: none !important; }'
-}));
+app.use(express.static('public'));
 
 app.use(morgan('dev', {
   // skip: (req, res) => res.statusCode < 400
 }));
-
-app.get('/', (req, res) => {
-    res.redirect('/docs');
-});
 
 const router = express.Router();
 app.use('/v1', router);
