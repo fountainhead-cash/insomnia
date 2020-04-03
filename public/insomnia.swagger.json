@@ -444,6 +444,16 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "verbose",
+						"description": "Render transaction as JSON",
+						"required": false,
+						"example": false,
+						"schema": {
+							"type": "boolean"
+						}
 					}
 				],
 				"responses": {

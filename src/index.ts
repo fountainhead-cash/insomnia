@@ -50,6 +50,7 @@ app.use('/v1', router);
 
 router.get('/tx/data/:txid', async (req, res) => {
   const transactionID = req.params.txid;
+  const verbose = req.query.verbose || false;
   try {
     var electrumResponse = await electrum.request('blockchain.transaction.get', transactionID, false);
   } catch (e) {
@@ -66,9 +67,24 @@ router.get('/tx/data/:txid', async (req, res) => {
     });
   }
 
+  let response = null;
+  if (! verbose) {
+    response = electrumResponse;
+  } else {
+    try {
+      const tx = new bitcore.Transaction(electrumResponse);
+      response = tx.toJSON();
+    } catch (e) {
+      return res.status(500).send({
+        success: false,
+        message: e.message,
+      });
+    }
+  }
+
   return res.send({
     success: true,
-    txdata: electrumResponse,
+    tx:      response,
   });
 });
 
