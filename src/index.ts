@@ -4,6 +4,12 @@ import { Cluster } from 'electrum-cash';
 import express from 'express';
 import bodyParser from 'body-parser';
 import bitcore from 'bitcore-lib-cash';
+import {
+  GenesisParseResult,
+  MintParseResult,
+  SendParseResult,
+  parseSLP
+} from 'slp-parser';
 import morgan from 'morgan';
 import rateLimit from "express-rate-limit";
 
@@ -74,6 +80,33 @@ router.get('/tx/data/:txid', async (req, res) => {
     try {
       const tx = new bitcore.Transaction(electrumResponse);
       response = tx.toJSON();
+      if (response.outputs.length > 0) {
+        try {
+          const parsed = parseSLP(response.outputs[0].script);
+          const fmtd: any = parsed;
+          if (parsed.transactionType === "GENESIS") {
+            let o = parsed.data as GenesisParseResult;
+            fmtd.data.ticker       = o.ticker.toString('hex');
+            fmtd.data.name         = o.ticker.toString('hex');
+            fmtd.data.documentUri  = o.documentUri.toString('hex');
+            fmtd.data.documentHash = o.documentHash.toString('hex');
+          }
+          else if (parsed.transactionType === "MINT") {
+            let o = parsed.data as MintParseResult;
+            fmtd.data.tokenid = o.tokenid.toString('hex');
+          }
+          else if (parsed.transactionType === "SEND") {
+            let o = parsed.data as SendParseResult;
+            fmtd.data.tokenid  = o.tokenid.toString('hex');
+          }
+
+          response.slp = parsed;
+        } catch (e) {
+          response.slp = {
+            error: e.message
+          }
+        }
+      }
     } catch (e) {
       return res.status(500).send({
         success: false,
