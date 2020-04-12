@@ -93,11 +93,11 @@ router.get('/tx/data/:txid', async (req, res) => {
           }
           else if (parsed.transactionType === "MINT") {
             let o = parsed.data as MintParseResult;
-            fmtd.data.tokenid = o.tokenid.toString('hex');
+            fmtd.data.tokenId = o.tokenId.toString('hex');
           }
           else if (parsed.transactionType === "SEND") {
             let o = parsed.data as SendParseResult;
-            fmtd.data.tokenid  = o.tokenid.toString('hex');
+            fmtd.data.tokenId  = o.tokenId.toString('hex');
           }
 
           response.slp = parsed;
