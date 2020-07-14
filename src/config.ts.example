@@ -1,10 +1,19 @@
+import { Cluster } from "electrum-cash";
+
 const config = {
   "port": 8000,
   "electrum": {
     "application": "MyApplication",
     "version": "1.4.1",
+    // or use "client" which will use first server
+    "connectionType": "cluster",
+    // only relevant for cluster, you can also choose Cluster.ORDER.PRIORITY
+    "order": Cluster.ORDER.RANDOM,
+    // only relevant for cluster
     "confidence": 2,
+    // only relevant for cluster
     "distribution": 3,
+    // must be hostname:port
     "servers": [
       "fulcrum.fountainhead.cash:50002",
       "electrum.imaginary.cash:50002",

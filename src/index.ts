@@ -1,6 +1,6 @@
 import { config } from './config';
 import fs from 'fs';
-import { Cluster } from 'electrum-cash';
+import { Cluster, Client } from 'electrum-cash';
 import express from 'express';
 import bodyParser from 'body-parser';
 import bitcore from 'bitcore-lib-cash';
@@ -13,22 +13,36 @@ import {
 import morgan from 'morgan';
 import rateLimit from "express-rate-limit";
 
+let electrum = null;
+if (config.electrum.connectionType === 'cluster') {
+  electrum = new Cluster(
+    config.electrum.application,
+    config.electrum.version,
+    config.electrum.confidence,
+    config.electrum.distribution,
+    config.electrum.order,
+  );
 
-const electrum = new Cluster(
-  config.electrum.application,
-  config.electrum.version,
-  config.electrum.confidence,
-  config.electrum.distribution,
-  Cluster.ORDER.PRIORITY
-);
-
-for (const server of config.electrum.servers) {
-  const [host, port] = server.split(':');
-  if (typeof(host) === 'undefined' || typeof(port) === 'undefined') {
-    throw new Error("server field has bad format (should be host:port)");
+  for (const server of config.electrum.servers) {
+    const [host, port] = server.split(':');
+    if (typeof(host) === 'undefined' || typeof(port) === 'undefined') {
+      throw new Error("server field has bad format (should be host:port)");
+    }
+    electrum.addServer(host, port);
   }
-  electrum.addServer(host, port);
+} else if (config.electrum.connectionType === 'client') {
+  const [hostname, port] = config.electrum.servers[0].split(':');
+  electrum = new Client(
+    config.electrum.application,
+    config.electrum.version,
+    hostname,
+    parseInt(port, 10)
+  );
+} else {
+  console.log('unknown electrum.connectionType');
+  process.exit(1);
 }
+
 
 const apiLimiter = rateLimit({
   ...config.ratelimit,
@@ -343,12 +357,20 @@ router.get('/address/utxos/:address', async (req, res) => {
 
 
 (async () => {
-  await electrum.ready();
+  if (config.electrum.connectionType === 'cluster') {
+    await electrum.ready();
+  } else if (config.electrum.connectionType === 'client') {
+    await electrum.connect();
+  }
   app.listen(config.port);
   console.log('listening on port', config.port);
 
   process.on('beforeExit', async () => {
-    await electrum.shutdown();
+    if (config.electrum.connectionType === 'cluster') {
+      await electrum.shutdown();
+    } else if (config.electrum.connectionType === 'client') {
+      await electrum.disconnect();
+    }
     process.exit(0);
   });
 })();
