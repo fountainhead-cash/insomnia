@@ -178,10 +178,10 @@ router.post('/tx/broadcast', async (req, res) => {
     });
   }
 
-  if (! electrumResponse.match(/[a-f0-9]{64}/)) {
+  if (! electrumResponse.toString().match(/[a-f0-9]{64}/)) {
     return res.status(400).send({
       success: false,
-      message: electrumResponse,
+      message: electrumResponse.toString(),
     });
   }
 

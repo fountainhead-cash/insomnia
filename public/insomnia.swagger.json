@@ -531,9 +531,9 @@
 					"required": true,
 					"content": {
 						"text/plain": {
-							"schema": {
-								"$ref": "#/components/schemas/TransactionBroadcastResponse"
-							}
+                            "schema": {
+                                "type": "string"
+                            }
 						}
 					}
 				},
@@ -542,7 +542,7 @@
 						"description": "Successful operation"
 					},
 					"400": {
-						"description": "Transaction not found"
+						"description": "Failed broadcast"
 					}
 				}
 			}
