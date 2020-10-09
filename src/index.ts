@@ -70,13 +70,24 @@ app.use('/v1', router);
 
 router.get('/tx/data/:txid', async (req, res) => {
   const transactionID = req.params.txid;
-  const verbose = req.query.verbose || false;
+  const verbose = req.query.verbose === 'true';
   try {
     var electrumResponse = await electrum.request('blockchain.transaction.get', transactionID, false);
   } catch (e) {
     return res.status(500).send({
       success: false,
       message: e.message,
+    });
+  }
+
+  try {
+    if (electrumResponse instanceof Error) {
+      throw electrumResponse;
+    }
+  } catch (e) {
+    return res.status(400).send({
+      success: false,
+      message: electrumResponse.message,
     });
   }
 
@@ -156,8 +167,18 @@ router.get('/tx/data/:txid', async (req, res) => {
 });
 
 router.get('/tx/merkle/:txid/:height', async (req, res) => {
+  try {
+    if (isNaN(req.params.height as any)) {
+      throw new Error('invalid parameter height; expected integer');
+    }
+  } catch (e) {
+    return res.status(400).send({
+      success: false,
+      message: e.message,
+    });
+  }
   const transactionID = req.params.txid;
-  const blockHeight = req.params.height;
+  const blockHeight = parseInt(req.params.height, 10);
   try {
     var electrumResponse = await electrum.request('blockchain.transaction.get_merkle', transactionID, blockHeight);
   } catch (e) {
@@ -212,9 +233,25 @@ router.post('/tx/broadcast', async (req, res) => {
 });
 
 router.get('/block/headers/:height', async (req, res) => {
-  const blockHeight = req.params.height;
-  const count = req.query.count || 1;
-  const cpHeight = req.query.cp_height || 0;
+  try {
+    if (isNaN(req.params.height as any)) {
+      throw new Error('invalid parameter height; expected integer');
+    }
+    if (req.query.count && isNaN(req.query.count as any)) {
+      throw new Error('invalid parameter count; expected integer');
+    }
+    if (req.query.cp_height && isNaN(req.query.cp_height as any)) {
+      throw new Error('invalid parameter cp_height; expected integer');
+    }
+  } catch (e) {
+    return res.status(400).send({
+      success: false,
+      message: e.message,
+    });
+  }
+  const blockHeight = parseInt(req.params.height, 10);
+  const count = parseInt(req.query.count, 10) || 1;
+  const cpHeight = parseInt(req.query.cp_height, 10) || 0;
   try {
     var electrumResponse = await electrum.request('blockchain.block.headers', blockHeight, count, cpHeight);
   } catch (e) {
@@ -225,6 +262,17 @@ router.get('/block/headers/:height', async (req, res) => {
   }
 
   if (electrumResponse.hasOwnProperty("code")) {
+    return res.status(400).send({
+      success: false,
+      message: electrumResponse.message,
+    });
+  }
+
+  try {
+    if (electrumResponse instanceof Error) {
+      throw electrumResponse;
+    }
+  } catch (e) {
     return res.status(400).send({
       success: false,
       message: electrumResponse.message,
