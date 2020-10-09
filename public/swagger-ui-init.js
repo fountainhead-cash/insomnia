@@ -208,7 +208,7 @@ window.onload = function() {
             {
               "name": "address",
               "in": "path",
-              "description": "the address in cashAddr format",
+              "description": "the address in cashAddr, SLP, or legacy format",
               "required": true,
               "example": "bitcoincash:qpr270a5sxphltdmggtj07v4nskn9gmg9yx4m5h7s4",
               "schema": {
@@ -252,7 +252,7 @@ window.onload = function() {
             {
               "name": "address",
               "in": "path",
-              "description": "the address in cashAddr format",
+              "description": "the address in cashAddr, SLP, or legacy format",
               "required": true,
               "example": "bitcoincash:qpr270a5sxphltdmggtj07v4nskn9gmg9yx4m5h7s4",
               "schema": {
@@ -296,7 +296,7 @@ window.onload = function() {
             {
               "name": "address",
               "in": "path",
-              "description": "the address in cashAddr format",
+              "description": "the address in cashAddr, SLP, or legacy format",
               "required": true,
               "example": "bitcoincash:qpr270a5sxphltdmggtj07v4nskn9gmg9yx4m5h7s4",
               "schema": {
@@ -340,7 +340,7 @@ window.onload = function() {
             {
               "name": "address",
               "in": "path",
-              "description": "the address in cashAddr format",
+              "description": "the address in cashAddr, SLP, or legacy format",
               "required": true,
               "example": "bitcoincash:qpr270a5sxphltdmggtj07v4nskn9gmg9yx4m5h7s4",
               "schema": {

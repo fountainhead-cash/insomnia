@@ -10,7 +10,7 @@ import {
   SendParseResult,
   parseSLP
 } from 'slp-parser';
-import { toSlpAddress } from 'bchaddrjs-slp';
+import { toCashAddress, toSlpAddress } from 'bchaddrjs-slp';
 import morgan from 'morgan';
 import rateLimit from "express-rate-limit";
 
@@ -287,6 +287,7 @@ router.get('/block/headers/:height', async (req, res) => {
 
 
 const addressToScripthash = (addrstr: string) => {
+  addrstr = toCashAddress(addrstr); // allow conversion of different address types
   const address = bitcore.Address.fromString(addrstr)
   const script = bitcore.Script.fromAddress(address);
   const scripthash = bitcore.crypto.Hash.sha256(script.toBuffer()).reverse().toString('hex');
