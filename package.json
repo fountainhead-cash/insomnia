@@ -15,6 +15,7 @@
   "dependencies": {
     "@types/express": "^4.17.3",
     "@types/node": "^13.9.3",
+    "bchaddrjs-slp": "^0.2.9",
     "bitcore-lib-cash": "^8.16.2",
     "dotenv": "^8.2.0",
     "electrum-cash": "^1.2.0",

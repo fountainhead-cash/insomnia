@@ -10,6 +10,7 @@ import {
   SendParseResult,
   parseSLP
 } from 'slp-parser';
+import { toSlpAddress } from 'bchaddrjs-slp';
 import morgan from 'morgan';
 import rateLimit from "express-rate-limit";
 
@@ -94,6 +95,26 @@ router.get('/tx/data/:txid', async (req, res) => {
     try {
       const tx = new bitcore.Transaction(electrumResponse);
       response = tx.toJSON();
+      for (let input of response.inputs) {
+        try {
+          const script = new bitcore.Script(input.script);
+          input.cashAddress = script.toAddress().toString();
+          input.slpAddress = toSlpAddress(input.cashAddress);
+        } catch (e) {
+          input.cashAddress = null;
+          input.slpAddress = null;
+        }
+      }
+      for (let output of response.outputs) {
+        try {
+          const script = new bitcore.Script(output.script);
+          output.cashAddress = script.toAddress().toString();
+          output.slpAddress = toSlpAddress(output.cashAddress);
+        } catch (e) {
+          output.cashAddress = null;
+          output.slpAddress = null;
+        }
+      }
       if (response.outputs.length > 0) {
         try {
           const parsed = parseSLP(response.outputs[0].script);
