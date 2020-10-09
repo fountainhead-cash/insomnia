@@ -1,6 +1,6 @@
 import { config } from './config';
 import fs from 'fs';
-import { Cluster, Client } from 'electrum-cash';
+import { ElectrumCluster, ElectrumClient } from 'electrum-cash';
 import express from 'express';
 import bodyParser from 'body-parser';
 import bitcore from 'bitcore-lib-cash';
@@ -16,12 +16,11 @@ import rateLimit from "express-rate-limit";
 
 let electrum = null;
 if (config.electrum.connectionType === 'cluster') {
-  electrum = new Cluster(
+  electrum = new ElectrumCluster(
     config.electrum.application,
     config.electrum.version,
     config.electrum.confidence,
     config.electrum.distribution,
-    config.electrum.order,
   );
 
   for (const server of config.electrum.servers) {
@@ -33,7 +32,7 @@ if (config.electrum.connectionType === 'cluster') {
   }
 } else if (config.electrum.connectionType === 'client') {
   const [hostname, port] = config.electrum.servers[0].split(':');
-  electrum = new Client(
+  electrum = new ElectrumClient(
     config.electrum.application,
     config.electrum.version,
     hostname,

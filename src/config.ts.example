@@ -1,4 +1,4 @@
-import { Cluster } from "electrum-cash";
+import { ElectrumCluster } from "electrum-cash";
 
 const config = {
   "port": 8000,
@@ -7,8 +7,6 @@ const config = {
     "version": "1.4.1",
     // or use "client" which will use first server
     "connectionType": "cluster",
-    // only relevant for cluster, you can also choose Cluster.ORDER.PRIORITY
-    "order": Cluster.ORDER.RANDOM,
     // only relevant for cluster
     "confidence": 2,
     // only relevant for cluster

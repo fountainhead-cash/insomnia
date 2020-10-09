@@ -18,7 +18,7 @@
     "bchaddrjs-slp": "^0.2.9",
     "bitcore-lib-cash": "^8.22.2",
     "dotenv": "^8.2.0",
-    "electrum-cash": "^1.2.0",
+    "electrum-cash": "^2.0.4",
     "express": "^4.17.1",
     "express-rate-limit": "^5.1.1",
     "morgan": "^1.10.0",
