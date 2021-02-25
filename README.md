@@ -1,8 +1,8 @@
 # Running
 
 ```
-npm i
+yarn install
 cp src/config.ts.example src/config.ts
 $(EDITOR) src/config.ts
-npm start
+yarn start
 ```
