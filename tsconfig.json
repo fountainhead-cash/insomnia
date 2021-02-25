@@ -12,7 +12,10 @@
       "*": [
         "node_modules/*"
       ]
-    }
+    },
+    "lib": [
+      "es2020.promise"
+    ]
   },
   "include": [
     "src/**/*"

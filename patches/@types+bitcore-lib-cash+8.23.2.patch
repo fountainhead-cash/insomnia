@@ -1,0 +1,91 @@
+diff --git a/node_modules/@types/bitcore-lib-cash/index.d.ts b/node_modules/@types/bitcore-lib-cash/index.d.ts
+index aad4473..8766306 100644
+--- a/node_modules/@types/bitcore-lib-cash/index.d.ts
++++ b/node_modules/@types/bitcore-lib-cash/index.d.ts
+@@ -46,7 +46,7 @@ export namespace crypto {
+     class TransactionSignature extends Signature {
+         constructor(arg: object | string | TransactionSignature);
+ 
+-        toObject(): object;
++        toObject(): any;
+         static fromObject(obj: object): TransactionSignature;
+     }
+ }
+@@ -122,7 +122,7 @@ export namespace Transaction {
+ 
+         setScript(script: Script | string | Buffer): this;
+         inspect(): string;
+-        toObject(): object;
++        toObject(): any;
+     }
+ 
+     namespace Input {
+@@ -135,7 +135,7 @@ export namespace Transaction {
+                 opts?: object,
+             );
+ 
+-            toObject(): object;
++            toObject(): any;
+             getSignatures(
+                 transaction: Transaction,
+                 privateKey: PrivateKey,
+@@ -170,7 +170,7 @@ export namespace Transaction {
+                 opts?: object,
+             );
+ 
+-            toObject(): object;
++            toObject(): any;
+             getSignatures(
+                 transaction: Transaction,
+                 privateKey: PrivateKey,
+@@ -237,7 +237,7 @@ export namespace Transaction {
+         static fromObject(obj: object): Input;
+         static fromBufferReader(br: encoding.BufferReader): Input;
+ 
+-        toObject(): object;
++        toObject(): any;
+         toBufferWriter(writer: encoding.BufferWriter): encoding.BufferWriter;
+ 
+         setScript(script: Script): this;
+@@ -279,8 +279,8 @@ export class Transaction {
+ 
+     toBuffer(): Buffer;
+     toBufferWriter(): encoding.BufferWriter;
+-    toObject(): object;
+-    toJSON(): object;
++    toObject(): any;
++    toJSON(): any;
+ 
+     static fromBuffer(buffer: Buffer): Transaction;
+     static fromBufferReader(reader: encoding.BufferReader): Transaction;
+@@ -357,8 +357,8 @@ export class PrivateKey {
+     toAddress(network?: string | Networks.Network): Address;
+     toPublicKey(): PublicKey;
+     toString(): string;
+-    toObject(): object;
+-    toJSON(): object;
++    toObject(): any;
++    toJSON(): any;
+     toWIF(): string;
+ 
+     static fromString(str: string): PrivateKey;
+@@ -398,8 +398,8 @@ export class HDPrivateKey {
+     deriveNonCompliantChild(arg: string | number, hardened?: boolean): HDPrivateKey;
+ 
+     toString(): string;
+-    toObject(): object;
+-    toJSON(): object;
++    toObject(): any;
++    toJSON(): any;
+     toBuffer(): Buffer;
+ 
+     static fromString(arg: string): HDPrivateKey;
+@@ -559,7 +559,7 @@ export class Address {
+ 
+     toBuffer(): Buffer;
+     toCashBuffer(): Buffer;
+-    toObject(): object;
++    toObject(): any;
+     toLegacyAddress(): string;
+     toCashAddress(): string;
+     toString(): string;

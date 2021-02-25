@@ -24,6 +24,10 @@ const config = {
   "ratelimit": {
     "windowMs": 1 * 60 * 1000,
     "max": 100
+  },
+  "gspp": {
+    "url": "gs.fountainhead.cash:443",
+    "cert": null
   }
 };
 
