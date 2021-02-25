@@ -68,22 +68,74 @@ app.use(morgan('dev', {
 const router = express.Router();
 app.use('/v1', router);
 
+async function blockchainTransactionGet(transactionID: string) {
+  var electrumResponse = await electrum.request('blockchain.transaction.get', transactionID, false);
+
+  if (electrumResponse instanceof Error) {
+    throw electrumResponse;
+  }
+
+  return electrumResponse;
+}
+
+function hydrateTransaction(transactionHex: string): any {
+  const tx = new bitcore.Transaction(transactionHex);
+  let response = tx.toJSON();
+  for (let input of response.inputs) {
+    try {
+      const script = new bitcore.Script(input.script);
+      input.cashAddress = script.toAddress().toString();
+      input.slpAddress = toSlpAddress(input.cashAddress);
+    } catch (e) {
+      input.cashAddress = null;
+      input.slpAddress = null;
+    }
+  }
+  for (let output of response.outputs) {
+    try {
+      const script = new bitcore.Script(output.script);
+      output.cashAddress = script.toAddress().toString();
+      output.slpAddress = toSlpAddress(output.cashAddress);
+    } catch (e) {
+      output.cashAddress = null;
+      output.slpAddress = null;
+    }
+  }
+  if (response.outputs.length > 0) {
+    try {
+      const parsed = parseSLP(response.outputs[0].script);
+      const fmtd: any = parsed;
+      if (parsed.transactionType === "GENESIS") {
+        let o = parsed.data as GenesisParseResult;
+        fmtd.data.ticker       = o.ticker.toString('hex');
+        fmtd.data.name         = o.ticker.toString('hex');
+        fmtd.data.documentUri  = o.documentUri.toString('hex');
+        fmtd.data.documentHash = o.documentHash.toString('hex');
+      }
+      else if (parsed.transactionType === "MINT") {
+        let o = parsed.data as MintParseResult;
+        fmtd.data.tokenId = o.tokenId.toString('hex');
+      }
+      else if (parsed.transactionType === "SEND") {
+        let o = parsed.data as SendParseResult;
+        fmtd.data.tokenId  = o.tokenId.toString('hex');
+      }
+
+      response.slp = parsed;
+    } catch (e) {
+      response.slp = {
+        error: e.message
+      }
+    }
+  }
+  return response;
+}
+
 router.get('/tx/data/:txid', async (req, res) => {
   const transactionID = req.params.txid;
   const verbose = req.query.verbose === 'true';
   try {
-    var electrumResponse = await electrum.request('blockchain.transaction.get', transactionID, false);
-  } catch (e) {
-    return res.status(500).send({
-      success: false,
-      message: e.message,
-    });
-  }
-
-  try {
-    if (electrumResponse instanceof Error) {
-      throw electrumResponse;
-    }
+    var electrumResponse = await blockchainTransactionGet(transactionID);
   } catch (e) {
     return res.status(400).send({
       success: false,
@@ -103,56 +155,8 @@ router.get('/tx/data/:txid', async (req, res) => {
     response = electrumResponse;
   } else {
     try {
-      const tx = new bitcore.Transaction(electrumResponse);
-      response = tx.toJSON();
-      for (let input of response.inputs) {
-        try {
-          const script = new bitcore.Script(input.script);
-          input.cashAddress = script.toAddress().toString();
-          input.slpAddress = toSlpAddress(input.cashAddress);
-        } catch (e) {
-          input.cashAddress = null;
-          input.slpAddress = null;
-        }
-      }
-      for (let output of response.outputs) {
-        try {
-          const script = new bitcore.Script(output.script);
-          output.cashAddress = script.toAddress().toString();
-          output.slpAddress = toSlpAddress(output.cashAddress);
-        } catch (e) {
-          output.cashAddress = null;
-          output.slpAddress = null;
-        }
-      }
-      if (response.outputs.length > 0) {
-        try {
-          const parsed = parseSLP(response.outputs[0].script);
-          const fmtd: any = parsed;
-          if (parsed.transactionType === "GENESIS") {
-            let o = parsed.data as GenesisParseResult;
-            fmtd.data.ticker       = o.ticker.toString('hex');
-            fmtd.data.name         = o.ticker.toString('hex');
-            fmtd.data.documentUri  = o.documentUri.toString('hex');
-            fmtd.data.documentHash = o.documentHash.toString('hex');
-          }
-          else if (parsed.transactionType === "MINT") {
-            let o = parsed.data as MintParseResult;
-            fmtd.data.tokenId = o.tokenId.toString('hex');
-          }
-          else if (parsed.transactionType === "SEND") {
-            let o = parsed.data as SendParseResult;
-            fmtd.data.tokenId  = o.tokenId.toString('hex');
-          }
-
-          response.slp = parsed;
-        } catch (e) {
-          response.slp = {
-            error: e.message
-          }
-        }
-      }
-    } catch (e) {
+      response = hydrateTransaction(electrumResponse);
+    }catch (e) {
       return res.status(500).send({
         success: false,
         message: e.message,
