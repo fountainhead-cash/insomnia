@@ -254,8 +254,8 @@ router.get('/block/headers/:height', async (req, res) => {
     });
   }
   const blockHeight = parseInt(req.params.height, 10);
-  const count = parseInt(req.query.count, 10) || 1;
-  const cpHeight = parseInt(req.query.cp_height, 10) || 0;
+  const count = parseInt(req.query.count as string, 10) || 1;
+  const cpHeight = parseInt(req.query.cp_height as string, 10) || 0;
   try {
     var electrumResponse = await electrum.request('blockchain.block.headers', blockHeight, count, cpHeight);
   } catch (e) {
