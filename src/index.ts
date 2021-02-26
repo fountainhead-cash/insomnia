@@ -62,7 +62,7 @@ const apiLimiter = rateLimit({
 });
 
 const app = express();
-app.use(bodyParser.text({ limit: '100kb' }));
+app.use(bodyParser.text({ limit: '250kb' }));
 app.disable('x-powered-by');
 app.use('/v1/', apiLimiter);
 
