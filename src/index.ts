@@ -248,26 +248,35 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   const tx = new bitcore.Transaction(transactionHex);
 
   const slpTaggedInputTransactions: any[] = [];
-  for (const input of tx.inputs) {
+
+  const inputsTxsResults = await Promise.allSettled(
+    tx.inputs.map((input) => {
+        // console.log(input.prevTxId.toString('hex'));
+        return blockchainTransactionGet(input.prevTxId.toString('hex'))
+    })
+  );
+  for (let idx=0; idx<inputsTxsResults.length; ++idx) {
+    const o = inputsTxsResults[idx];
+
+    const input = tx.inputs[idx];
     const itxid: Buffer = input.prevTxId;
     const ivout: number = input.outputIndex;
 
-    try {
-      const itxres = await blockchainTransactionGet(itxid.toString('hex'));
-      const itxd = hydrateTransaction(itxres);
-
-      if (typeof itxd.slp.error === 'undefined') {
-        itxd.relevantSlpOutput = ivout;
-        if (itxd.slp.transactionType === 'GENESIS') {
-          itxd.slp.data.tokenId = itxd.hash;
-        }
-        slpTaggedInputTransactions.push(itxd);
-      }
-    } catch (e) {
+    if (o.status !== 'fulfilled') {
       return res.status(400).send({
         success: false,
         message: `could not retrieve input ${itxid.toString('hex')}:${ivout}`,
       });
+    }
+
+    const itxd = hydrateTransaction(o.value);
+
+    if (typeof itxd.slp.error === 'undefined') {
+      itxd.relevantSlpOutput = ivout;
+      if (itxd.slp.transactionType === 'GENESIS') {
+        itxd.slp.data.tokenId = itxd.hash;
+      }
+      slpTaggedInputTransactions.push(itxd);
     }
   }
 
@@ -275,6 +284,9 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
     slpTaggedInputTransactions.map((txi) => gspp.trustedValidationFor({
       hash: txi.hash,
       reversedHashOrder: true,
+    }).then((gres) => {
+        // console.log(`${txi.hash} gs++ result`);
+        return gres;
     }))
   );
 
