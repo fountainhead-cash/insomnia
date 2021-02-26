@@ -177,6 +177,14 @@
 						"type": "string"
 					}
 				}
+			},
+			"SlpPrebroadcastResponse": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean"
+					}
+				}
 			}
         }
     },
@@ -539,10 +547,68 @@
 				},
 				"responses": {
 					"200": {
-						"description": "Successful operation"
+						"description": "Successful operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionBroadcastResponse"
+								}
+							}
+						}
 					},
 					"400": {
-						"description": "Failed broadcast"
+						"description": "Failed broadcast",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse",
+									"message": "Broadcast failed."
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tx/slp_prebroadcast": {
+			"post": {
+				"tags": [
+					"transaction"
+				],
+				"summary": "Checks SLP transaction for burns.",
+				"description": "Checks raw transaction (serialized, hex-encoded) against GS++ to try to ensure no tokens are burned.",
+				"requestBody": {
+					"description": "raw tx hex",
+					"required": true,
+					"content": {
+						"text/plain": {
+                            "schema": {
+                                "type": "string"
+                            }
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successful operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SlpPrebroadcastResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Failed operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse",
+									"message": "Received a transaction which may burn tokens."
+								}
+							}
+						}
 					}
 				}
 			}
