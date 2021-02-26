@@ -300,6 +300,10 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   let relevantSlpInputs: any[] = [];
   let hasMintBaton = false;
   for (let itx of slpTaggedInputTransactions) {
+    if (! itx.validity.gspp.valid) {
+      continue;
+    }
+
     const rvout = itx.relevantSlpOutput;
     let slpValue = new BigNumber(0);
 
