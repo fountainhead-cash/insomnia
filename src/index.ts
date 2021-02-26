@@ -367,23 +367,24 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   }
 
   if (relevantSlpInputs.length > 0) {
-    if (txd.slp.tokenType !== relevantSlpInputs[0].tokenType) {
-      return res.status(400).send({
-        success: false,
-        message: `input's tokenType different than transactions causing burn`,
-      });
-    }
+    if (txd.slp.tokenType === 0x41 && relevantSlpInputs[0].tokenType === 0x81 && txd.slp.transactionType === 'GENESIS') {
+      // normal child genesis
+    } else {
+      if (txd.slp.tokenType !== relevantSlpInputs[0].tokenType) {
+        return res.status(400).send({
+          success: false,
+          message: `input's tokenType different than transactions causing burn`,
+        });
+      }
 
-    if (txd.slp.data.tokenId !== relevantSlpInputs[0].tokenId) {
-      return res.status(400).send({
-        success: false,
-        message: `input's tokenId different than transactions causing burn`,
-      });
+      if (txd.slp.data.tokenId !== relevantSlpInputs[0].tokenId) {
+        return res.status(400).send({
+          success: false,
+          message: `input's tokenId different than transactions causing burn`,
+        });
+      }
     }
   }
-
-  // TODO handle mints / mint baton
-
 
   let totalSlpOutputValue = new BigNumber(0);
   if (txd.slp.transactionType === 'SEND') {
