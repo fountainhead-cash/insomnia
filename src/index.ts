@@ -353,6 +353,12 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
     }
   }
 
+  // used for repetition reduction
+  const burnsTokensResponse = (message) => res.status(200).send({
+    success: false,
+    message,
+  });
+
   const allSameTypes = relevantSlpInputs.every((v, i, arr) =>
     v.slpValue.eq(0)
       ? true
@@ -363,10 +369,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   );
 
   if (! allSameTypes) {
-    return res.status(200).send({
-      success: false,
-      message: `tokenType or tokenId mismatch related burn detected`,
-    });
+    return burnsTokensResponse(`tokenType or tokenId mismatch related burn detected`);
   }
 
   const totalSlpInputValue = relevantSlpInputs.reduce(
@@ -377,10 +380,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   const txd = hydrateTransaction(transactionHex);
 
   if (typeof txd.slp.error !== 'undefined') {
-    return res.status(200).send({
-      success: false,
-      message: `error in slp metadata ${txd.slp.error}`,
-    });
+    return burnsTokensResponse(`error in slp metadata ${txd.slp.error}`);
   }
 
   if (relevantSlpInputs.length > 0) {
@@ -388,17 +388,11 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
       // normal child genesis
     } else {
       if (txd.slp.tokenType !== relevantSlpInputs[0].tokenType) {
-        return res.status(200).send({
-          success: false,
-          message: `input's tokenType different than transactions causing burn`,
-        });
+        return burnsTokensResponse('inputs tokenType different than transactions causing burn');
       }
 
       if (txd.slp.data.tokenId !== relevantSlpInputs[0].tokenId) {
-        return res.status(200).send({
-          success: false,
-          message: `input's tokenId different than transactions causing burn`,
-        });
+        return burnsTokensResponse('inputs tokenId different than transactions causing burn');
       }
     }
   }
@@ -416,90 +410,53 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   if (txd.slp.transactionType === 'GENESIS') {
     // TODO allow burning of mint baton
     if (hasMintBaton) {
-      return res.status(200).send({
-        success: false,
-        message: `baton input for GENESIS type would cause burning of baton`,
-      });
+      return burnsTokensResponse('baton input for GENESIS type would cause burning of baton');
     }
     if (txd.slp.data.mintBatonVout >= txd.outputs.length) {
-      return res.status(200).send({
-        success: false,
-        message: `mint baton would be burned as there isnt a corresponding bch output`,
-      });
+      return burnsTokensResponse('mint baton would be burned as there isnt a corresponding bch output');
     }
   }
   else if (txd.slp.transactionType === 'MINT') {
     if (! hasMintBaton) {
-      return res.status(200).send({
-        success: false,
-        message: `transactionType mint without corresponding baton input`,
-      });
+      return burnsTokensResponse('transactionType mint without corresponding baton input');
     }
     if (totalSlpInputValue.gt(0)) {
-      return res.status(200).send({
-        success: false,
-        message: `slp inputs greater than 0 for mint`,
-      });
+      return burnsTokensResponse('slp inputs greater than 0 for mint');
     }
     // TODO allow ending of mint baton
     if (txd.slp.data.mintBatonVout === 0) {
-      return res.status(200).send({
-        success: false,
-        message: `mint baton output not set`,
-      });
+      return burnsTokensResponse('mint baton output not set');
     }
     // TODO see above?
     if (txd.outputs.length < 2) {
-      return res.status(200).send({
-        success: false,
-        message: `there is no output for mint to credit`,
-      });
+      return burnsTokensResponse('there is no output for mint to credit');
     }
     if (txd.slp.data.mintBatonVout >= txd.outputs.length) {
-      return res.status(200).send({
-        success: false,
-        message: `mint baton would be burned as there isnt a corresponding bch output`,
-      });
+      return burnsTokensResponse('mint baton would be burned as there isnt a corresponding bch output');
     }
     if (txd.slp.tokenType === 0x41) {
-      return res.status(200).send({
-        success: false,
-        message: `nft children cannot be minted`,
-      });
+      return burnsTokensResponse('nft children cannot be minted');
     }
   }
   else if (txd.slp.transactionType === 'SEND') {
     // TODO allow burning of mint baton
     if (hasMintBaton) {
-      return res.status(200).send({
-        success: false,
-        message: `baton input for SEND type would cause burning of baton`,
-      });
+      return burnsTokensResponse('baton input for SEND type would cause burning of baton');
     }
     if (totalSlpOutputValue.gt(totalSlpInputValue)) {
-      return res.status(200).send({
-        success: false,
-        message: `slp outputs greater than inputs`,
-      });
+      return burnsTokensResponse('slp outputs greater than inputs');
     }
     if (txd.outputs.length < txd.slp.data.amounts.length + 1) {
-      return res.status(200).send({
-        success: false,
-        message: `fewer bch outputs than slp outputs`,
-      });
+      return burnsTokensResponse('fewer bch outputs than slp outputs');
     }
   }
-
 
   // TODO allow burn of up to X coins via parameter
   if (totalSlpOutputValue.lt(totalSlpInputValue)) {
-    return res.status(200).send({
-      success: false,
-      message: `slp outputs less than inputs`,
-    });
+    return burnsTokensResponse('slp outputs less than inputs');
   }
 
-  return res.status(200).send({
+  return res.status(200).json({
     success: true,
     message: 'transaction does not burn tokens'
   });
