@@ -82,6 +82,10 @@ async function blockchainTransactionGet(transactionID: string) {
     throw electrumResponse;
   }
 
+  if (electrumResponse.hasOwnProperty("code")) {
+    throw new Error(electrumResponse.message);
+  }
+
   return electrumResponse;
 }
 
@@ -144,13 +148,6 @@ router.get('/tx/data/:txid', async (req, res) => {
   try {
     var electrumResponse = await blockchainTransactionGet(transactionID);
   } catch (e) {
-    return res.status(400).send({
-      success: false,
-      message: electrumResponse.message,
-    });
-  }
-
-  if (electrumResponse.hasOwnProperty("code")) {
     return res.status(400).send({
       success: false,
       message: electrumResponse.message,
