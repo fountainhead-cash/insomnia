@@ -47,6 +47,7 @@ if (config.electrum.connectionType === 'cluster') {
 
 let gspp = new GraphSearchClient({
   url:          config.gspp.url,
+  notls:        config.gspp.insecure,
   rootCertPath: config.gspp.cert ? config.gspp.cert : undefined,
 });
 

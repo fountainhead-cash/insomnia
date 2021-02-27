@@ -27,6 +27,7 @@ const config = {
   },
   "gspp": {
     "url": "gs.fountainhead.cash:443",
+    "insecure": false,
     "cert": null
   }
 };
