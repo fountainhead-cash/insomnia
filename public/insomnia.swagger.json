@@ -183,6 +183,9 @@
 				"properties": {
 					"success": {
 						"type": "boolean"
+					},
+					"message": {
+						"type": "string"
 					}
 				}
 			}
@@ -590,7 +593,7 @@
 				},
 				"responses": {
 					"200": {
-						"description": "Successful operation",
+						"description": "Successful operation. Check 'success' property to see if safe transaction.",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -605,7 +608,29 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ErrorResponse",
-									"message": "Received a transaction which may burn tokens."
+									"message": "Received a txid which was invalid in some way."
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse",
+									"message": "Try again. Something went wrong."
+								}
+							}
+						}
+					},
+					"502": {
+						"description": "Bad connection to gateway server",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse",
+									"message": "Try again. Something went wrong."
 								}
 							}
 						}

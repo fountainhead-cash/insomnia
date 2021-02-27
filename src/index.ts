@@ -1,7 +1,7 @@
 import { config } from './config';
 import fs from 'fs';
 import { ElectrumCluster, ElectrumClient } from 'electrum-cash';
-import { GraphSearchClient, TrustedValidationReply } from 'grpc-graphsearch-node';
+import { GraphSearchClient, TrustedValidationReply, TrustedValidationBulkReply } from 'grpc-graphsearch-node';
 import BigNumber from 'bignumber.js';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -242,17 +242,23 @@ router.post('/tx/broadcast', async (req, res) => {
 
 router.post('/tx/slp_prebroadcast', async (req, res) => {
   const transactionHex = req.body;
-  const tx = new bitcore.Transaction(transactionHex);
+  let tx = null;
+  try {
+    tx = new bitcore.Transaction(transactionHex);
+  } catch (e) {
+    return res.status(400).send({
+      success: false,
+      message: e.message,
+    });
+  }
 
   const slpTaggedInputTransactions: any[] = [];
 
-  const inputsTxsResults = await Promise.allSettled(
-    tx.inputs.map((input) => {
-        // console.log(input.prevTxId.toString('hex'));
-        return blockchainTransactionGet(input.prevTxId.toString('hex'))
-    })
+  let inputsTxsResults = await Promise.allSettled(
+    tx.inputs.map((input) => blockchainTransactionGet(input.prevTxId.toString('hex')))
   );
-  for (let idx=0; idx<inputsTxsResults.length; ++idx) {
+
+  for (let idx=0; idx<tx.inputs.length; ++idx) {
     const o = inputsTxsResults[idx];
 
     const input = tx.inputs[idx];
@@ -260,7 +266,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
     const ivout: number = input.outputIndex;
 
     if (o.status !== 'fulfilled') {
-      return res.status(400).send({
+      return res.status(502).send({
         success: false,
         message: `could not retrieve input ${itxid.toString('hex')}:${ivout}`,
       });
@@ -277,27 +283,29 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
     }
   }
 
-  const gsppResults = await Promise.allSettled(
-    slpTaggedInputTransactions.map((txi) => gspp.trustedValidationFor({
-      hash: txi.hash,
+  let gsppResult = null;
+  try {
+    const hashes = slpTaggedInputTransactions.map((txi) => txi.hash);
+    gsppResult = await gspp.trustedValidationBulkFor({
+      hashes,
       reversedHashOrder: true,
-    }).then((gres) => {
-        // console.log(`${txi.hash} gs++ result`);
-        return gres;
-    }))
-  );
+    });
+  } catch (e) {
+    return res.status(502).send({
+      success: false,
+      message: e.message,
+    });
+  }
 
-  for (let idx=0; idx<gsppResults.length; ++idx) {
-    const o = gsppResults[idx];
-
-    if (o.status !== 'fulfilled') {
-      return res.status(400).send({
-        success: false,
-        message: `could not retrieve all gs++ validity results`,
-      });
-    }
-
-    const valid = o.value.getValid();
+  const validList = gsppResult.getValidList();
+  if (validList.length !== slpTaggedInputTransactions.length) {
+    return res.status(500).send({
+      success: false,
+      message: `validList length different than slpTaggedInputTransactions length`,
+    });
+  }
+  for (let idx=0; idx<validList.length; ++idx) {
+    const valid = validList[idx].getValid();
 
     slpTaggedInputTransactions[idx].validity = {
       gspp: {
@@ -321,7 +329,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
       if (rvout-1 < itx.slp.data.amounts.length) {
         slpValue = itx.slp.data.amounts[rvout-1];
       }
-    } else /* mint and genesis */ {
+    } else if (itx.slp.transactionType === 'MINT' || itx.slp.transactionType === 'GENESIS') {
       if (rvout === 1) {
         slpValue = itx.slp.data.qty;
       }
@@ -355,7 +363,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   );
 
   if (! allSameTypes) {
-    return res.status(400).send({
+    return res.status(200).send({
       success: false,
       message: `tokenType or tokenId mismatch related burn detected`,
     });
@@ -369,7 +377,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   const txd = hydrateTransaction(transactionHex);
 
   if (typeof txd.slp.error !== 'undefined') {
-    return res.status(400).send({
+    return res.status(200).send({
       success: false,
       message: `error in slp metadata ${txd.slp.error}`,
     });
@@ -380,14 +388,14 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
       // normal child genesis
     } else {
       if (txd.slp.tokenType !== relevantSlpInputs[0].tokenType) {
-        return res.status(400).send({
+        return res.status(200).send({
           success: false,
           message: `input's tokenType different than transactions causing burn`,
         });
       }
 
       if (txd.slp.data.tokenId !== relevantSlpInputs[0].tokenId) {
-        return res.status(400).send({
+        return res.status(200).send({
           success: false,
           message: `input's tokenId different than transactions causing burn`,
         });
@@ -408,13 +416,13 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   if (txd.slp.transactionType === 'GENESIS') {
     // TODO allow burning of mint baton
     if (hasMintBaton) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `baton input for GENESIS type would cause burning of baton`,
       });
     }
     if (txd.slp.data.mintBatonVout >= txd.outputs.length) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `mint baton would be burned as there isnt a corresponding bch output`,
       });
@@ -422,54 +430,60 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
   }
   else if (txd.slp.transactionType === 'MINT') {
     if (! hasMintBaton) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `transactionType mint without corresponding baton input`,
       });
     }
     if (totalSlpInputValue.gt(0)) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `slp inputs greater than 0 for mint`,
       });
     }
     // TODO allow ending of mint baton
     if (txd.slp.data.mintBatonVout === 0) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `mint baton output not set`,
       });
     }
     // TODO see above?
     if (txd.outputs.length < 2) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `there is no output for mint to credit`,
       });
     }
     if (txd.slp.data.mintBatonVout >= txd.outputs.length) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `mint baton would be burned as there isnt a corresponding bch output`,
+      });
+    }
+    if (txd.slp.tokenType === 0x41) {
+      return res.status(200).send({
+        success: false,
+        message: `nft children cannot be minted`,
       });
     }
   }
   else if (txd.slp.transactionType === 'SEND') {
     // TODO allow burning of mint baton
     if (hasMintBaton) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `baton input for SEND type would cause burning of baton`,
       });
     }
     if (totalSlpOutputValue.gt(totalSlpInputValue)) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `slp outputs greater than inputs`,
       });
     }
     if (txd.outputs.length < txd.slp.data.amounts.length + 1) {
-      return res.status(400).send({
+      return res.status(200).send({
         success: false,
         message: `fewer bch outputs than slp outputs`,
       });
@@ -479,7 +493,7 @@ router.post('/tx/slp_prebroadcast', async (req, res) => {
 
   // TODO allow burn of up to X coins via parameter
   if (totalSlpOutputValue.lt(totalSlpInputValue)) {
-    return res.status(400).send({
+    return res.status(200).send({
       success: false,
       message: `slp outputs less than inputs`,
     });
