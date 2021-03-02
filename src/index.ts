@@ -67,6 +67,12 @@ app.use(bodyParser.text({ limit: '250kb' }));
 app.disable('x-powered-by');
 app.use('/v1/', apiLimiter);
 
+// CORS support for web apps
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+})
+
 app.use(express.static('public'));
 
 app.use(morgan('dev', {
