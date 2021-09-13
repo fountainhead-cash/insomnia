@@ -707,7 +707,7 @@
 		},
 		{
 			"name": "dsproof",
-			"description": "DSProof (Double Spend Proofs) <b>EXPERIMENTAL</b>"
+			"description": "Double Spend Proofs"
 		}
 	]
 }
