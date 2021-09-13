@@ -167,34 +167,6 @@ router.get('/tx/data/:txid', async (req, res) => {
   });
 });
 
-router.get('/tx/dsproof/:txid', async (req, res) => {
-  const transactionID = req.params.txid;
-  try {
-    var electrumResponse = await electrum.request('blockchain.transaction.dsproof.get', transactionID);
-
-    if (electrumResponse !== null) {
-      if (electrumResponse instanceof Error) {
-        throw electrumResponse;
-      }
-
-      if (electrumResponse.hasOwnProperty("code")) {
-        throw new Error(electrumResponse.message);
-      }
-    }
-  } catch (e) {
-    return res.status(400).send({
-      success: false,
-      proof: e.message,
-    });
-  }
-
-  return res.send({
-    success: true,
-    proof:   electrumResponse,
-  });
-});
-
-
 router.get('/tx/merkle/:txid/:height', async (req, res) => {
   try {
     if (isNaN(req.params.height as any)) {
@@ -450,6 +422,57 @@ router.get('/address/utxos/:address', async (req, res) => {
   return res.send({
     success: true,
     utxos: electrumResponse,
+  });
+});
+
+router.get('/dsproof/data/:txid', async (req, res) => {
+  const transactionID = req.params.txid;
+  try {
+    var electrumResponse = await electrum.request('blockchain.transaction.dsproof.get', transactionID);
+
+    if (electrumResponse !== null) {
+      if (electrumResponse instanceof Error) {
+        throw electrumResponse;
+      }
+
+      if (electrumResponse.hasOwnProperty("code")) {
+        throw new Error(electrumResponse.message);
+      }
+    }
+  } catch (e) {
+    return res.status(400).send({
+      success: false,
+      message: e.message,
+    });
+  }
+
+  return res.send({
+    success: true,
+    proof:   electrumResponse,
+  });
+});
+
+router.get('/dsproof/list', async (req, res) => {
+  try {
+    var electrumResponse = await electrum.request('blockchain.transaction.dsproof.list');
+
+    if (electrumResponse instanceof Error) {
+      throw electrumResponse;
+    }
+
+    if (electrumResponse.hasOwnProperty("code")) {
+      throw new Error(electrumResponse.message);
+    }
+  } catch (e) {
+    return res.status(500).send({
+      success: false,
+      message: e.message,
+    });
+  }
+
+  return res.send({
+    success: true,
+    txs:     electrumResponse,
   });
 });
 

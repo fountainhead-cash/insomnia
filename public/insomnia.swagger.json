@@ -190,6 +190,20 @@
 					}
 				}
 			},
+			"DSProofListResponse": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"txs": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					}
+				}
+			},
 			"MerkleBranch": {
 				"type": "string"
 			},
@@ -524,42 +538,6 @@
 				}
 			}
 		},
-		"/tx/dsproof/{txid}": {
-			"get": {
-				"tags": [
-					"transaction"
-				],
-				"summary": "Return information on a double spend proof.",
-				"description": "If the transaction in question has an associated dsproof , then a JSON object. Otherwise null",
-				"parameters": [
-					{
-						"in": "path",
-						"name": "txid",
-						"description": "The transaction id",
-						"required": true,
-						"example": "a1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "Successful operation",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/TransactionDSProofResponse"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Transaction not found"
-					}
-				}
-			}
-		},
 		"/tx/merkle/{txid}/{height}": {
 			"get": {
 				"tags": [
@@ -648,6 +626,65 @@
 					}
 				}
 			}
+		},
+		"/dsproof/data/{txid}": {
+			"get": {
+				"tags": [
+					"dsproof"
+				],
+				"summary": "Return information on a double spend proof.",
+				"description": "If the transaction in question has an associated dsproof , then a JSON object. Otherwise null",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "txid",
+						"description": "The transaction id",
+						"required": true,
+						"example": "a1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TransactionDSProofResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid tx hash"
+					}
+				}
+			}
+		},
+		"/dsproof/list": {
+			"get": {
+				"tags": [
+					"dsproof"
+				],
+				"summary": "List all of the transactions that currently have double-spend proofs associated with them.",
+				"description": "Results in an array of txids which have a double-spend proof associated with them. May be empty. Each of the hashes appearing in the list may be given as an argument to /dsproof/:txid in order to obtain the associated double-spend proof for that transaction.",
+				"parameters": [
+				],
+				"responses": {
+					"200": {
+						"description": "Successful operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DSProofListResponse"
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	},
 	"servers": [
@@ -667,6 +704,10 @@
 		{
 			"name": "transaction",
 			"description": "Transaction details"
+		},
+		{
+			"name": "dsproof",
+			"description": "DSProof (Double Spend Proofs) <b>EXPERIMENTAL</b>"
 		}
 	]
 }
