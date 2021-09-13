@@ -24,7 +24,6 @@
     "electrum-cash": "^2.0.4",
     "express": "^4.17.1",
     "express-rate-limit": "^5.1.1",
-    "grpc-graphsearch-node": "^0.2.1",
     "morgan": "^1.10.0",
     "patch-package": "^6.2.2",
     "slp-parser": "0.0.4"
